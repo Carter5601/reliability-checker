@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reliability Checker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      background-color: #f4f6f8;
+    }
+    h1 {
+      color: #333;
+    }
+    input[type="text"] {
+      width: 60%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 25px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    textarea {
+      margin-top: 30px;
+      width: 90%;
+      height: 250px;
+      padding: 15px;
+      font-size: 14px;
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Product or Website Reliability Checker</h1>
+  <input type="text" id="query" placeholder="Enter a product or website (e.g. Temu, AirPods, Wish.com)" />
+  <br>
+  <button onclick="analyze()">Check Reliability</button>
+  <br>
+  <textarea id="result" readonly placeholder="Results will appear here..."></textarea>
+
+  <script>
+    async function analyze() {
+  const query = document.getElementById("query").value;
+  const resBox = document.getElementById("result");
+
+  if (!query.trim()) {
+    resBox.value = "❗ Please enter a product or website name.";
+    return;
+  }
+
+  resBox.value = "⏳ Analyzing... please wait.";
+
+  try {
+    const response = await fetch("/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ query })
+    });
+
+    const contentType = response.headers.get("content-type");
+
+    if (!response.ok) {
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        resBox.value = "❌ Error: " + (errorData.error || "Unknown backend error.");
+      } else {
+        const text = await response.text();
+        resBox.value = "❌ Server error:\n" + text;
+      }
+      return;
+    }
+
+    const data = await response.json();
+    resBox.value = data.summary || "No summary returned.";
+  } catch (err) {
+    console.error("Fetch error:", err);
+    resBox.value = "❌ Something went wrong. Check your server or browser console.";
+  }
+}
+
+  </script>
+</body>
+</html>
+
